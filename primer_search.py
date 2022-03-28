@@ -1,3 +1,7 @@
+import csv
+from Bio import SeqIO
+
+
 class Sequence:
 
     alphabet = []
@@ -19,6 +23,7 @@ class Sequence:
     def sequence(self):  # возвращает саму последовательность
         return self.seq
 
+
 class DNA(Sequence):
 
     alphabet = ['A', 'T', 'G', 'C']
@@ -35,15 +40,21 @@ class DNA(Sequence):
 
 
 # Обработка данных, введенных пользователем
-def input_file_process(list_path, table_path):
+def input_file_process(table_path, list_path):
     seqs = {}  # создали пустой словарь, чтобы добавить туда все последовательности
-    with open(table_path) as table:  # открываем файл на чтение
-        for line in table:  # пробегаемся по всей таблице, что ввел пользователь
-            if '# имя группы #' not in seqs:  # проверяем наличие группы в словаре, надо вытащить из таблицы
-                seqs['# имя группы #'] = []  # если нет, то создем ключ с именем группы и к нему пустой список
-            # добавляем последовательность в словарь, надо вытащить из списка
-            with open(list_path) as list:
-                seqs['# имя группы #'].append(DNA('# имя последовательности #', '# сама последовательность #'))
+    with open(table_path, 'r') as table:  # открываем файл на чтение
+        table = csv.reader(table, delimiter=';')
+        next(table, None)   # пропускаем 1 строчку таблицы (названия столбцов)
+        for row in table:  # пробегаемся по всей таблице, что ввел пользователь
+            if row[0] not in seqs:  # проверяем наличие группы в словаре, надо вытащить из таблицы
+                seqs[row[0]] = []  # если нет, то создем ключ с именем группы и к нему пустой список
+            # добавляем последовательность в словарь
+            with open(list_path, 'r') as list:
+                list = SeqIO.parse(list, 'fasta')  # преобразуем fasta-файл для вычленения интересующих пар-в
+                for feature in list:  # для каждой посл-ти из списка ищем совпадение имени в списке и табл
+                    if feature.name in row:
+                        seqs[row[0]].append(DNA(str(feature.name), str(feature.seq)))
+    return seqs
 
 
 if __name__ == '__main__':
