@@ -19,10 +19,6 @@ class Sequence:
     def sequence(self):  # возвращает саму последовательность
         return self.seq
 
-    @property
-    def len(self):
-        return len(self.seq)  # возвращает длину последовательности
-
 class DNA(Sequence):
 
     alphabet = ['A', 'T', 'G', 'C']
