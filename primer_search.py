@@ -54,10 +54,40 @@ def input_file_process(table_path, list_path):
                 for feature in list:  # для каждой посл-ти из списка ищем совпадение имени в списке и табл
                     if feature.name in row:
                         seqs[row[0]].append(DNA(str(feature.name), str(feature.seq)))
+
+
+# код для того, чтобы посмотреть наш словарь, потом уберем
+    for key in seqs:
+        for s in seqs[key]:
+            print(key, s.name, s.seq, len(s)) # выводит группу, имя, последовательность и ее длину
     return seqs
 
+# функция для разделения последовательности на k-меры
+def seq_kmers(k, sequence):  # принимает длину к-мера и последовательность
+    kmers = []
+    for s in range(0, len(sequence) - k + 1):
+        kmer = sequence[s:s+k]
+        kmers.append(kmer)
+    return kmers   # возвращает списком все к-меры последовательности
+
+# создание словаря, где каждой возможной длине праймера в группах соответствуют пары
+# (последовательность : множество подстрок длины k)
+def kmers_dict(dict):
+    kmers_dict = {}  # создали пустой словарь k-меров
+    for group in dict:  # для каждой группы в словаре
+        kmers_dict[group] = {}  # словарь состоит из групп
+        for s in dict[group]:  # для каждой последовательности в группе
+            for k in range(16, 31):  # для каждой длины праймерв (задаем границы)
+                kmers_dict[group][k] = {}  # в группах возможные варианты длины k-меров
+                unique_kmers = set(seq_kmers(k, s.seq))  # находим множество к-меров (длины k)
+                kmers_dict[group][k][s] = unique_kmers  # в k хранятся (последовательность : подстроки длины k)
+    print(kmers_dict)
 
 if __name__ == '__main__':
-    # Здесь надо подумать, что будет вводить пользователь, думаю, что это должны быть полные пути к файлам
+    # Пользователь вводит полные пути к файлам
     path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
-    input_file_process(path_to_table, path_to_list)
+    # /Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv
+    # /Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta
+    seq_dict = input_file_process(path_to_table, path_to_list)
+    kmers_dict(seq_dict)
+
