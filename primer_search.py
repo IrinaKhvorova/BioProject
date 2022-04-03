@@ -38,6 +38,28 @@ class DNA(Sequence):
             comp_seq += comp[i]
         return comp_seq
 
+class Primer:
+    alphabet = ['A', 'T', 'G', 'C']
+
+    def __init__(self, seq):
+        self.seq = seq
+
+    def __getitem__(self, item):  # возвращает по запросу символ в последовательности
+        return self.seq[item]
+
+    def __len__(self):  # возвращает длину последовательности
+        return len(self.seq)
+
+    def gc_cont(self):
+        total = len(self.seq)
+        c = self.seq.count("C")
+        g = self.seq.count("G")
+        gc_total = g + c
+        gc_content = gc_total / float(total)
+        return(gc_content)
+
+    def temp(self):
+        total = len(self.seq)
 
 # Обработка данных, введенных пользователем
 def input_file_process(table_path, list_path):
