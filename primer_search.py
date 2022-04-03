@@ -39,7 +39,7 @@ class DNA(Sequence):
         return comp_seq
 
 
-# Обработка данных, введенных пользователем
+# обработка данных, введенных пользователем
 def input_file_process(table_path, list_path):
     seqs = {}  # создали пустой словарь, чтобы добавить туда все последовательности
     with open(table_path, 'r') as table:  # открываем таблицу на чтение
@@ -57,8 +57,8 @@ def input_file_process(table_path, list_path):
 
     # код для того, чтобы посмотреть словарь исходных последовательностей
     for key in seqs:
-        for s in seqs[key]:
-            print(key, s.name, s.seq, len(s)) # выводит группу, имя, последовательность и ее длину
+       for s in seqs[key]:
+         print(key, s.name, s.seq, len(s)) # выводит группу, имя, последовательность и ее длину
 
     return seqs
 
@@ -90,7 +90,7 @@ def kmers_dict(seq_dict):
 # создание словаря праймеров
 # оставляем из словаря k-меров только те праймеры, которые общие для всех последовательностей группы
 def primer_dict(seq_dict):
-    primer_dict = {}  # сойдаем пустой словарь праймеров
+    primer_dict = {}  # создаем пустой словарь праймеров
     dict = kmers_dict(seq_dict)  # получаем словарь k-меров
     for group in dict:  # для каждой группы
         primer_dict[group] = []  # словарь праймеров состоит из групп
@@ -106,6 +106,31 @@ def primer_dict(seq_dict):
     for key in primer_dict:  # для каждой группы
         print(key, primer_dict[key]) # выводит группу и список праймеров
 
+    return primer_dict   # возвращаем словарь праймеров
+
+
+# удаляем из значений словаря праймеры, которые являются подстроками более длинных праймеров
+# сортируем в порядке возрастания длины праймеров
+# обновляем значения в словаре
+def unique_primer(primer_dict):
+    substrings_set = set()   # создаем пустое множество для добавления подстрок
+    for key in primer_dict:   # для каждой группы
+        primer_dict[key].sort(key=len)  # сортируем список праймеров по возрастанию длины
+        for i in range(len(primer_dict[key])):   # для каждого праймера из списка
+            for j in range(i + 1, len(primer_dict[key])):   # каждый следующий праймер из списка
+                if primer_dict[key][i] in primer_dict[key][j]:   # проверяем входит ли в него праймер i
+                    substrings_set.add(primer_dict[key][i])   # если входит, добавляем праймер i в множ-во подстрок
+        substrings_list = list(substrings_set)   # полученное мн-во трансформируем в список
+        # оставляем в списке только те строки(праймеры), кот-х нет в списке подстрок
+        unique_primer_list = [item for item in primer_dict[key] if item not in substrings_list]
+        primer_dict[key] = unique_primer_list   # перезаписываем для каждого ключа обновленный список
+
+    # код для того, чтобы посмотреть словарь отсортированных праймеров
+    for key in primer_dict:  # для каждой группы
+        print(key, primer_dict[key])   # выводит группу и оставшиеся праймеры, отсорт. по длине
+
+    return primer_dict   # возвращаем словарь праймеров без повторов и подстрок
+
 
 if __name__ == '__main__':
     # Пользователь вводит полные пути к файлам
@@ -114,5 +139,10 @@ if __name__ == '__main__':
     # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
     # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
+    # Tanya's paths: table =  ./TestPro.csv  list = ./TestPro.fasta
+
     seq_dict = input_file_process(path_to_table, path_to_list)
     primer_dict(seq_dict)
+
+    primers_dict = primer_dict(seq_dict)
+    unique_primer(primers_dict)
