@@ -56,7 +56,7 @@ class Primer:
         g = self.seq.count("G")
         gc_total = g + c
         gc_content = gc_total / float(total)
-        return(gc_content)
+        return gc_content
 
     def temp(self):
         total = len(self.seq)
@@ -64,8 +64,8 @@ class Primer:
         t = self.seq.count("T")
         c = self.seq.count("C")
         g = self.seq.count("G")
-        temper = 22 + 1.46([2 x (g+c)] + (a+t))
-        return(temper)
+        temper = 22 + 1.46 * ([2 x (g+c)] + (a+t))
+        return temper
 
 # обработка данных, введенных пользователем
 def input_file_process(table_path, list_path):
