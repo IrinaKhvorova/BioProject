@@ -60,6 +60,12 @@ class Primer:
 
     def temp(self):
         total = len(self.seq)
+        a = self.seq.count("A")
+        t = self.seq.count("T")
+        c = self.seq.count("C")
+        g = self.seq.count("G")
+        temper = 22 + 1.46([2 x (g+c)] + (a+t))
+        return(temper)
 
 # обработка данных, введенных пользователем
 def input_file_process(table_path, list_path):
