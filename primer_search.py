@@ -38,6 +38,7 @@ class DNA(Sequence):
             comp_seq += comp[i]
         return comp_seq
 
+
 class Primer:
     alphabet = ['A', 'T', 'G', 'C']
 
