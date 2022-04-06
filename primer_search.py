@@ -38,19 +38,8 @@ class DNA(Sequence):
             comp_seq += comp[i]
         return comp_seq
 
-<<<<<<< HEAD
-
-class Primer:
-    alphabet = ['A', 'T', 'G', 'C']
-
-    def __init__(self, seq):
-        self.seq = seq
-
-    def __getitem__(self, item):  # возвращает по запросу символ в последовательности
-        return self.seq[item]
-=======
 class Primer(DNA):
->>>>>>> 373c75f1b9f52f3659d84085b249529a41ab92d7
+
 
     def __init__(self, name, seq):
         super().__init__(name, seq)
