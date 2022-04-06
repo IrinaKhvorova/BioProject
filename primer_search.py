@@ -38,27 +38,20 @@ class DNA(Sequence):
             comp_seq += comp[i]
         return comp_seq
 
-class Primer:
-    alphabet = ['A', 'T', 'G', 'C']
+class Primer(DNA):
 
-    def __init__(self, seq):
-        self.seq = seq
-
-    def __getitem__(self, item):  # возвращает по запросу символ в последовательности
-        return self.seq[item]
-
-    def __len__(self):  # возвращает длину последовательности
-        return len(self.seq)
+    def __init__(self, name, seq):
+        super().__init__(name, seq)
 
     def gc_cont(self):
         total = len(self.seq)
         c = self.seq.count("C")
         g = self.seq.count("G")
         gc_total = g + c
-        gc_content = gc_total / float(total)
+        gc_content = gc_total / total
         return gc_content
 
-    def temp(self):
+    def temp(self):  #
         total = len(self.seq)
         a = self.seq.count("A")
         t = self.seq.count("T")
@@ -160,18 +153,38 @@ def unique_primer(primer_dict):
 
     return primer_dict   # возвращаем словарь праймеров без повторов и подстрок
 
+# фильтрация праймеров по GC составу
+def gc_primer(primer_dict):
+    for key in primer_dict:   # для каждой группы
+        primers = []
+        for i in primer_dict[key]:   # для каждого праймера из списка
+            i = Primer(key,i)
+            if 0.5 < i.gc_cont() < 0.6:     # если GC состав меньше 50% и больше 60%
+                primers.append(i)
+        primers_dict[key] = primers
+
+    for key in primer_dict:    # для каждой группы
+        print(key, primer_dict[key])       # выводит группу и отфильтрованные праймеры
+
+    return primer_dict   # возвращаем отфильтрованный по GC составу словарь праймеров
 
 if __name__ == '__main__':
     # Пользователь вводит полные пути к файлам
-    path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
+    # path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
 
     # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
     # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
     # Tanya's paths: table =  ./TestPro.csv  list = ./TestPro.fasta
 
+    # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
+    # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
+
     seq_dict = input_file_process(path_to_table, path_to_list)
     primer_dict(seq_dict)
 
     primers_dict = primer_dict(seq_dict)
     unique_primer(primers_dict)
+
+    unique_primers = unique_primer(primers_dict)
+    gc_primer(unique_primers)
