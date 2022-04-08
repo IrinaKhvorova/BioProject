@@ -37,6 +37,12 @@ class DNA(Sequence):
             comp_seq += comp[i]
         return comp_seq
 
+    def reverse(self):  # разворачивает последовательность
+        rev_seq = ''
+        for i in self.seq:
+            rev_seq = self.seq[::-1]
+        return rev_seq
+
 class Primer(DNA):
     def __init__(self, name, seq):
         super().__init__(name, seq)
