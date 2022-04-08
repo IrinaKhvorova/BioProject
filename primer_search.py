@@ -47,7 +47,7 @@ class Primer(DNA):
     def __init__(self, name, seq):
         super().__init__(name, seq)
 
-    def gc_cont(self):
+    def gc_cont(self):  # считает ГЦ состав праймера и выводит процентное соотношение
         total = len(self.seq)
         c = self.seq.count("C")
         g = self.seq.count("G")
@@ -55,7 +55,7 @@ class Primer(DNA):
         gc_content = gc_total / total
         return gc_content
 
-    def temp(self):  #
+    def temp(self):  # считает температуру отжига праймера
         total = len(self.seq)
         a = self.seq.count("A")
         t = self.seq.count("T")
@@ -82,8 +82,8 @@ def input_file_process(table_path, list_path):
 
     # код для того, чтобы посмотреть словарь исходных последовательностей
     for key in seqs:
-       for s in seqs[key]:
-         print(key, s.name, s.seq, len(s)) # выводит группу, имя, последовательность и ее длину
+        for s in seqs[key]:
+            print(key, s.name, s.seq, len(s)) # выводит группу, имя, последовательность и ее длину
 
     return seqs
 
