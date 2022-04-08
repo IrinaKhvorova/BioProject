@@ -187,15 +187,14 @@ def mismatch_sorter(seq_dict, primer_dict):
         for primer in primer_dict[group]:   # для каждого праймера из списка
             primer_annealing = False  # изначально отжиг праймера = F
             for gr in seq_dict: # для каждой группы
-                for seq in seq_dict[gr]:  # для каждой последовательности
-                    if gr != group:  # нас интересуют последовательности только других групп
-                        if mismatch_counter(seq.seq, primer.seq):  # проверка на отжиг праймера
+                if gr != group:  # нас интересуют последовательности только других групп
+                    for seq in seq_dict[gr]:  # для каждой последовательности группы
+                        if mismatch_counter(seq.seq, primer.seq):  # проверка на отжиг праймера на последовательности
                             primer_annealing = True  # праймер отжегся
                             break  # обрываем проверку на отжиг внутри группы
-            if primer_annealing:  # проверка на отжиг праймера
-                break   # обрываем проверку на отжиг - этот праймер не специфичен
-            else:  # значит праймер группоспецифичен
-                print(primer.seq)
+                if primer_annealing:  # проверка на отжиг праймера в группе
+                    break   # обрываем проверку на отжиг - этот праймер не специфичен
+            if not primer_annealing:  # проверка на отжиг праймера среди всех групп
                 specific_primers.append(primer)  # добавляем праймер в список специфичных праймеров
         primer_dict[group] = specific_primers  # сохраняем в словаре только группоспецифичные праймеры
     return primer_dict  # возвращаем словарь группоспецифичных праймеров
