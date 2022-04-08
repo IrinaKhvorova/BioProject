@@ -152,29 +152,53 @@ def unique_primer(primer_dict):
 
 # фильтрация праймеров по GC составу
 def gc_primer(primer_dict):
-    for key in primer_dict:   # для каждой группы
+    for group in primer_dict:   # для каждой группы
         primers = []
-        for i in primer_dict[key]:   # для каждого праймера из списка
-            i = Primer(key,i)
+        for i in primer_dict[group]:   # для каждого праймера из списка
+            i = Primer(group,i)
             if 0.5 < i.gc_cont() < 0.6:     # если GC состав меньше 50% и больше 60%
                 primers.append(i)
-        primers_dict[key] = primers
+        primer_dict[group] = primers
 
-    for key in primer_dict:    # для каждой группы
-        print(key, primer_dict[key])       # выводит группу и отфильтрованные праймеры
+    for group in primer_dict:    # для каждой группы
+        print(group, primer_dict[group])       # выводит группу и отфильтрованные праймеры
 
     return primer_dict   # возвращаем отфильтрованный по GC составу словарь праймеров
 
-# функция по подсчету мисматчей
+
+# функция по определению, оттожется ли праймер на последовательности
 def mismatch_counter(seq, primer):
+    primer_annealing = False  # изначально отжиг праймера = F
     for i in range(len(seq)-len(primer)):  # чтобы "отжечь" праймер на каждом возможном участке seq
         mismatch = 0  # для подсчета побуквенных несовпадений
         for j in range(len(primer)):  # побуквенно проходимся по primer
             if primer[j] != seq[i+j]:  # побуквенно сравниваем primer и участок seq
                 mismatch += 1  # считаем несовпадения
         if mismatch <= 3:  # если несовпадений было <= 3, то primer оттожется
+            primer_annealing = True
             break  # обрываем цикл, так как такой праймер нам заведомо не подходит
-    return mismatch  # возвращает количество мисматчей
+    return primer_annealing  # возвращает T или F в зависимости от того, оттожется ли праймер на seq
+
+
+# функция по созданию слооваря группоспецифичных праймеров
+def mismatch_sorter(seq_dict, primer_dict):
+    for group in primer_dict:   # для каждой группы
+        specific_primers = []  # список для специфичных праймеров
+        for primer in primer_dict[group]:   # для каждого праймера из списка
+            primer_annealing = False  # изначально отжиг праймера = F
+            for gr in seq_dict: # для каждой группы
+                for seq in seq_dict[gr]:  # для каждой последовательности
+                    if gr != group:  # нас интересуют последовательности только других групп
+                        if mismatch_counter(seq.seq, primer.seq):  # проверка на отжиг праймера
+                            primer_annealing = True  # праймер отжегся
+                            break  # обрываем проверку на отжиг внутри группы
+            if primer_annealing:  # проверка на отжиг праймера
+                break   # обрываем проверку на отжиг - этот праймер не специфичен
+            else:  # значит праймер группоспецифичен
+                print(primer.seq)
+                specific_primers.append(primer)  # добавляем праймер в список специфичных праймеров
+        primer_dict[group] = specific_primers  # сохраняем в словаре только группоспецифичные праймеры
+    return primer_dict  # возвращаем словарь группоспецифичных праймеров
 
 
 if __name__ == '__main__':
@@ -182,15 +206,20 @@ if __name__ == '__main__':
     #path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
     # path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
 
-    # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
-    # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
+    path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
+    path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
     # Tanya's paths: table =  ./TestPro.csv  list = ./TestPro.fasta
 
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
 
-    seq_dict = input_file_process(path_to_table, path_to_list)
-    primers_dict = primer_dict(seq_dict)
-    unique_primers = unique_primer(primers_dict)
-    gc_primer(unique_primers)
+    seq_dict = input_file_process(path_to_table, path_to_list)  # словарь исходных последовательностей
+    pre_primers_dict = primer_dict(seq_dict)  # словарь сходных участков последовательностей внутри групп
+    unique_pre_primers = unique_primer(pre_primers_dict) # словарь сходных участков без повторов и подстрок
+
+    # словарь матричных и комплементарных последовательностей
+    #primers_dict словарь праймеров (forward, reversed)
+
+    gc_primer_dict = gc_primer(unique_pre_primers)  # словарь сходных участков с допустимым GC составом
+    specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
