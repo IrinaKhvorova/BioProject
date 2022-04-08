@@ -165,6 +165,18 @@ def gc_primer(primer_dict):
 
     return primer_dict   # возвращаем отфильтрованный по GC составу словарь праймеров
 
+# функция по подсчету мисматчей
+def mismatch_counter(seq, primer):
+    for i in range(len(seq)-len(primer)):  # чтобы "отжечь" праймер на каждом возможном участке seq
+        mismatch = 0  # для подсчета побуквенных несовпадений
+        for j in range(len(primer)):  # побуквенно проходимся по primer
+            if primer[j] != seq[i+j]:  # побуквенно сравниваем primer и участок seq
+                mismatch += 1  # считаем несовпадения
+        if mismatch <= 3:  # если несовпадений было <= 3, то primer оттожется
+            break  # обрываем цикл, так как такой праймер нам заведомо не подходит
+    return mismatch  # возвращает количество мисматчей
+
+
 if __name__ == '__main__':
     # Пользователь вводит полные пути к файлам
     #path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
