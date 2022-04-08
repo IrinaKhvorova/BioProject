@@ -206,8 +206,8 @@ if __name__ == '__main__':
     #path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
     # path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
 
-    path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
-    path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
+    # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
+    # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
     # Tanya's paths: table =  ./TestPro.csv  list = ./TestPro.fasta
 
