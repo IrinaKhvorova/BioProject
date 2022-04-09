@@ -156,6 +156,31 @@ def unique_primer(primer_dict):
 
     return primer_dict   # возвращаем словарь праймеров без повторов и подстрок
 
+
+# создание forward-reverse праймеров
+def updated_primer(primer_dict):
+    for group in primer_dict:  # для каждой группы
+        primers = []           # создается пустой словарь
+        for i in primer_dict[group]:  # для каждого праймера из списка
+            pre_primer = []           # пустой словарь для предпраймеров
+            pre_primer = Primer('primers', i)     # присваивание к классу
+
+            reversed = Primer('reversed', pre_primer.reverse())   # создаем обратные праймеры
+            forward = Primer('forward', pre_primer.complement())  # создаем комплементарные праймеры для прямых
+            forward = Primer('forward', forward.reverse())        # создаем прямые праймеры
+
+            primers.append(forward)       # добавлем в словарь прямые праймеры
+            primers.append(reversed)      # добавляем в словарь обратные праймеры
+
+        primer_dict[group] = primers      # перезаписываем словарь
+
+# код для того, чтобы посмотреть словарь отсортированных праймеров
+    for key in primer_dict:           # для каждой группы
+        print(key, primer_dict[key])  # выводит группу и оставшиеся праймеры, отсорт. по длине
+
+    return primer_dict     # возвращаем словарь праймеров без повторов и подстрок
+
+
 # фильтрация праймеров по GC составу
 def gc_primer(primer_dict):
     for group in primer_dict:   # для каждой группы
@@ -219,12 +244,11 @@ if __name__ == '__main__':
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
 
-    seq_dict = input_file_process(path_to_table, path_to_list)  # словарь исходных последовательностей
-    pre_primers_dict = primer_dict(seq_dict)  # словарь сходных участков последовательностей внутри групп
-    unique_pre_primers = unique_primer(pre_primers_dict) # словарь сходных участков без повторов и подстрок
-
+    seq_dict = input_file_process(path_to_table, path_to_list)    # словарь исходных последовательностей
+    pre_primers_dict = primer_dict(seq_dict)     # словарь сходных участков последовательностей внутри групп
+    unique_pre_primers = unique_primer(pre_primers_dict)       # словарь сходных участков без повторов и подстрок
+    updated_pre_primers = updated_primer(unique_pre_primers)   # словарь прямых и обратных праймеров
     # словарь матричных и комплементарных последовательностей
-    #primers_dict словарь праймеров (forward, reversed)
 
-    gc_primer_dict = gc_primer(unique_pre_primers)  # словарь сходных участков с допустимым GC составом
+    gc_primer_dict = gc_primer(updated_pre_primers)  # словарь сходных участков с допустимым GC составом
     specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
