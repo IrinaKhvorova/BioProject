@@ -43,7 +43,9 @@ class DNA(Sequence):
             rev_seq = self.seq[::-1]
         return rev_seq
 
+
 class Primer(DNA):
+
     def __init__(self, name, seq):
         super().__init__(name, seq)
 
@@ -84,6 +86,27 @@ def input_file_process(table_path, list_path):
     for key in seqs:
         for s in seqs[key]:
             print(key, s.name, s.seq, len(s)) # выводит группу, имя, последовательность и ее длину
+
+    return seqs
+
+
+# функция для создания двух цепей ДНК
+def double_dna(seqs):
+    for group in seqs:              # для каждой группы
+        double_seqs = []            # создается пустой словарь
+        for orig_seq in seqs[group]:      # для каждой последовательности
+            comp_seq = DNA(orig_seq.name, orig_seq.complement())    # создает комплементарную последовательность
+            rev_seq = DNA(orig_seq.name, comp_seq.reverse())        # создает обратную последовательность
+
+            double_seqs.append(orig_seq)       # добавляем оригинальный сиквенс в словарь
+            double_seqs.append(rev_seq)        # добавляем новый сиквенс в словарь
+
+        seqs[group] = double_seqs     # перезаписываем словарь
+
+    # код для того, чтобы посмотреть словарь двух последовательностей
+    for key in seqs:
+        for s in seqs[key]:
+            print(key, s.name, s.seq, len(s))  # выводит группу, имя, последовательность и ее длину
 
     return seqs
 
@@ -158,7 +181,7 @@ def unique_primer(primer_dict):
 
 
 # создание forward-reverse праймеров
-def updated_primer(primer_dict):
+def forw_rev_primers(primer_dict):
     for group in primer_dict:  # для каждой группы
         primers = []           # создается пустой словарь
         for i in primer_dict[group]:  # для каждого праймера из списка
@@ -241,14 +264,14 @@ if __name__ == '__main__':
 
     # Tanya's paths: table =  ./TestPro.csv  list = ./TestPro.fasta
 
-    # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
-    # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
+    path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
+    path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
 
-    seq_dict = input_file_process(path_to_table, path_to_list)    # словарь исходных последовательностей
-    pre_primers_dict = primer_dict(seq_dict)     # словарь сходных участков последовательностей внутри групп
-    unique_pre_primers = unique_primer(pre_primers_dict)       # словарь сходных участков без повторов и подстрок
-    updated_pre_primers = updated_primer(unique_pre_primers)   # словарь прямых и обратных праймеров
-    # словарь матричных и комплементарных последовательностей
-
-    gc_primer_dict = gc_primer(updated_pre_primers)  # словарь сходных участков с допустимым GC составом
+    seq_dict = input_file_process(path_to_table, path_to_list)   # словарь исходных последовательностей
+    pre_primers_dict = primer_dict(seq_dict)                 # словарь сходных участков последовательностей внутри групп
+    unique_pre_primers = unique_primer(pre_primers_dict)         # словарь сходных участков без повторов и подстрок
+    forw_rev_pre_primers = forw_rev_primers(unique_pre_primers)     # словарь прямых и обратных праймеров
+    pre_seq_dict = double_dna(seq_dict)                          # словарь двух цепей последовательности
+    gc_primer_dict = gc_primer(forw_rev_pre_primers)              # словарь сходных участков с допустимым GC составом
     specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
+
