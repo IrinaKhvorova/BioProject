@@ -209,7 +209,6 @@ def gc_primer(primer_dict):
     for group in primer_dict:   # для каждой группы
         primers = []
         for i in primer_dict[group]:   # для каждого праймера из списка
-            i = Primer(group,i)
             if 0.5 < i.gc_cont() < 0.6:     # если GC состав меньше 50% и больше 60%
                 primers.append(i)
         primer_dict[group] = primers
@@ -264,14 +263,14 @@ if __name__ == '__main__':
 
     # Tanya's paths: table =  ./TestPro.csv  list = ./TestPro.fasta
 
-    path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
-    path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
+    # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
+    # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
 
     seq_dict = input_file_process(path_to_table, path_to_list)   # словарь исходных последовательностей
     pre_primers_dict = primer_dict(seq_dict)                 # словарь сходных участков последовательностей внутри групп
     unique_pre_primers = unique_primer(pre_primers_dict)         # словарь сходных участков без повторов и подстрок
-    forw_rev_pre_primers = forw_rev_primers(unique_pre_primers)     # словарь прямых и обратных праймеров
+    forw_rev_primers = forw_rev_primers(unique_pre_primers)     # словарь прямых и обратных праймеров
     pre_seq_dict = double_dna(seq_dict)                          # словарь двух цепей последовательности
-    gc_primer_dict = gc_primer(forw_rev_pre_primers)              # словарь сходных участков с допустимым GC составом
+    gc_primer_dict = gc_primer(forw_rev_primers)              # словарь сходных участков с допустимым GC составом
     specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
 
