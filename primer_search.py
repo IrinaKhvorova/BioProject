@@ -96,10 +96,11 @@ def double_dna(seqs):
     for group in seqs:              # для каждой группы
         double_seqs = []            # создается пустой словарь
         for orig_seq in seqs[group]:      # для каждой последовательности
+            matr_seq = DNA(orig_seq.name + " matr", orig_seq.seq)
             comp_seq = DNA(orig_seq.name, orig_seq.complement())    # создает комплементарную последовательность
-            rev_seq = DNA(orig_seq.name, comp_seq.reverse())        # создает обратную последовательность
+            rev_seq = DNA(orig_seq.name + " comp", comp_seq.reverse())        # создает обратную последовательность
 
-            double_seqs.append(orig_seq)       # добавляем оригинальный сиквенс в словарь
+            double_seqs.append(matr_seq)       # добавляем оригинальный сиквенс в словарь
             double_seqs.append(rev_seq)        # добавляем новый сиквенс в словарь
 
         seqs[group] = double_seqs     # перезаписываем словарь
@@ -186,12 +187,9 @@ def forw_rev_primers(primer_dict):
     for group in primer_dict:  # для каждой группы
         primers = []           # создается пустой словарь
         for i in primer_dict[group]:  # для каждого праймера из списка
-            pre_primer = []           # пустой словарь для предпраймеров
-            pre_primer = Primer('primers', i)     # присваивание к классу
-
-            reversed = Primer('reversed', pre_primer.reverse())   # создаем обратные праймеры
-            forward = Primer('forward', pre_primer.complement())  # создаем комплементарные праймеры для прямых
-            forward = Primer('forward', forward.reverse())        # создаем прямые праймеры
+            forward = Primer('forward', i)     # создаем прямые праймеры
+            reversed = Primer('reversed', forward.complement())  # создаем комплементарные праймеры для прямых
+            reversed = Primer('reversed', reversed.reverse())        # создаем обратные праймеры
 
             primers.append(forward)       # добавлем в словарь прямые праймеры
             primers.append(reversed)      # добавляем в словарь обратные праймеры
@@ -200,7 +198,8 @@ def forw_rev_primers(primer_dict):
 
 # код для того, чтобы посмотреть словарь отсортированных праймеров
     for group in primer_dict:           # для каждой группы
-        print(group, primer_dict[group])  # выводит группу и оставшиеся праймеры, отсорт. по длине
+        for primer in primer_dict[group]:
+            print(group, primer.name, primer.seq)  # выводит группу и оставшиеся праймеры, отсорт. по длине
 
     return primer_dict     # возвращаем словарь праймеров без повторов и подстрок
 
@@ -275,7 +274,7 @@ def primer_pair(specific_primer):
 # выводим полученные пары праймеров для каждой группы
     for group in specific_primer:   # для каждой группы
         for primer in specific_primer[group]:   # для каждого праймера в списке группы
-            print(group, primer.name, primer.temp())   # выводим: № группы, тип праймера, температуру отжига
+            print(group, primer.name, primer.seq, primer.temp())   # выводим: № группы, тип праймера, температуру отжига
     return specific_primer   # возвращаем словарь пар праймеров
 
 
@@ -306,11 +305,11 @@ if __name__ == '__main__':
     #path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
     # path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
 
-    # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
-    # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
+    path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
+    path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
-    path_to_table = './TestPro.csv'
-    path_to_list = './TestPro.fasta'
+    # path_to_table = './TestPro.csv'
+    # path_to_list = './TestPro.fasta'
 
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
@@ -323,5 +322,6 @@ if __name__ == '__main__':
     gc_primer_dict = gc_primer(forw_rev_primers)              # словарь сходных участков с допустимым GC составом
     specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
     pairs_primers = primer_pair(specific_primers)                # словарь пар праймеров
+
     output = output_file_process(pairs_primers)                 # вывод результатов в .csv файл
 
