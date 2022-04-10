@@ -1,5 +1,6 @@
 import csv
 from Bio import SeqIO
+from itertools import zip_longest
 
 class Sequence:
 
@@ -63,7 +64,7 @@ class Primer(DNA):
         t = self.seq.count("T")
         c = self.seq.count("C")
         g = self.seq.count("G")
-        temper = 22 + 1.46 * ([2*(g+c)] + (a+t))
+        temper = 22 + 1.46 * (2*(g+c) + (a+t))
         return temper
 
 # обработка данных, введенных пользователем
@@ -83,9 +84,9 @@ def input_file_process(table_path, list_path):
                         seqs[row[0]].append(DNA(str(feature.name), str(feature.seq)))
 
     # код для того, чтобы посмотреть словарь исходных последовательностей
-    for key in seqs:
-        for s in seqs[key]:
-            print(key, s.name, s.seq, len(s)) # выводит группу, имя, последовательность и ее длину
+    for group in seqs:
+        for s in seqs[group]:
+            print(group, s.name, s.seq, len(s)) # выводит группу, имя, последовательность и ее длину
 
     return seqs
 
@@ -162,20 +163,20 @@ def primer_dict(seq_dict):
 # обновляем значения в словаре
 def unique_primer(primer_dict):
     substrings_set = set()   # создаем пустое множество для добавления подстрок
-    for key in primer_dict:   # для каждой группы
-        primer_dict[key].sort(key=len)  # сортируем список праймеров по возрастанию длины
-        for i in range(len(primer_dict[key])):   # для каждого праймера из списка
-            for j in range(i + 1, len(primer_dict[key])):   # каждый следующий праймер из списка
-                if primer_dict[key][i] in primer_dict[key][j]:   # проверяем входит ли в него праймер i
-                    substrings_set.add(primer_dict[key][i])   # если входит, добавляем праймер i в множ-во подстрок
+    for group in primer_dict:   # для каждой группы
+        primer_dict[group].sort(key=len)  # сортируем список праймеров по возрастанию длины
+        for i in range(len(primer_dict[group])):   # для каждого праймера из списка
+            for j in range(i + 1, len(primer_dict[group])):   # каждый следующий праймер из списка
+                if primer_dict[group][i] in primer_dict[group][j]:   # проверяем входит ли в него праймер i
+                    substrings_set.add(primer_dict[group][i])   # если входит, добавляем праймер i в множ-во подстрок
         substrings_list = list(substrings_set)   # полученное мн-во трансформируем в список
         # оставляем в списке только те строки(праймеры), кот-х нет в списке подстрок
-        unique_primer_list = [item for item in primer_dict[key] if item not in substrings_list]
-        primer_dict[key] = unique_primer_list   # перезаписываем для каждого ключа обновленный список
+        unique_primer_list = [item for item in primer_dict[group] if item not in substrings_list]
+        primer_dict[group] = unique_primer_list   # перезаписываем для каждого ключа обновленный список
 
     # код для того, чтобы посмотреть словарь отсортированных праймеров
-    for key in primer_dict:  # для каждой группы
-        print(key, primer_dict[key])   # выводит группу и оставшиеся праймеры, отсорт. по длине
+    for group in primer_dict:  # для каждой группы
+        print(group, primer_dict[group])   # выводит группу и оставшиеся праймеры, отсорт. по длине
 
     return primer_dict   # возвращаем словарь праймеров без повторов и подстрок
 
@@ -198,8 +199,8 @@ def forw_rev_primers(primer_dict):
         primer_dict[group] = primers      # перезаписываем словарь
 
 # код для того, чтобы посмотреть словарь отсортированных праймеров
-    for key in primer_dict:           # для каждой группы
-        print(key, primer_dict[key])  # выводит группу и оставшиеся праймеры, отсорт. по длине
+    for group in primer_dict:           # для каждой группы
+        print(group, primer_dict[group])  # выводит группу и оставшиеся праймеры, отсорт. по длине
 
     return primer_dict     # возвращаем словарь праймеров без повторов и подстрок
 
@@ -253,6 +254,53 @@ def mismatch_sorter(seq_dict, primer_dict):
     return primer_dict  # возвращаем словарь группоспецифичных праймеров
 
 
+# функция подбора пар праймеров по температуре отжига
+def primer_pair(specific_primer):
+    for group in specific_primer:   # для каждой группы
+        pairs = []   # список пар праймеров
+        for i in range(len(specific_primer[group])):   # для каждого парймера из списка группы
+            primer_1 = specific_primer[group][i]
+            for j in range(i + 1, len(specific_primer[group])):   # проверяем каждый следующий праймер этой группы
+                primer_2 = specific_primer[group][j]
+                if primer_1.name == 'forward' and primer_2.name == 'reversed':   # если могут образовать пару прмой-обратный
+                    if abs(primer_1.temp() - primer_2.temp()) <= 5:  # разность температуры отжига не превышает 5 по модулю
+                        pairs.append(primer_1)   # добавляем прямой праймер в список
+                        pairs.append(primer_2)   # добавляем обратный праймер в список
+                    else:
+                        print('no matcing pairs')   # вывод если совпадения не найдены
+                else:
+                    continue   # продолжаем идти по списку, если праймеры не образуют пару прямой-обратный
+        specific_primer[group] = pairs   # сохраняем в словаре только пары праймеров
+
+# выводим полученные пары праймеров для каждой группы
+    for group in specific_primer:   # для каждой группы
+        for primer in specific_primer[group]:   # для каждого праймера в списке группы
+            print(group, primer.name, primer.temp())   # выводим: № группы, тип праймера, температуру отжига
+    return specific_primer   # возвращаем словарь пар праймеров
+
+
+# запись результата подбора праймеров в файл
+def output_file_process(primer_pairs):
+    total = []   # список списков
+    groups = []   # список для записи групп
+    primers_name = []   # список для записи типа праймера
+    primers_seqs = []   # список для записи последовательностей праймеров
+    for group in primer_pairs:   # для каждой группы из словаря пар праймеров
+        for primer in primer_pairs[group]:   # для каждого праймера группы
+            groups.append(group)   # записываем номер группы
+            primers_name.append(primer.name)   # записываем тип праймера
+            primers_seqs.append(primer.seq)   # заисываем последовательность праймера
+    total.append(groups)   # добавляем списки в общий список
+    total.append(primers_name)
+    total.append(primers_seqs)
+    export_data = zip_longest(*total, fillvalue='')
+    with open('final_table.csv', 'w', encoding="ISO-8859-1", newline='') as final_table:   # создаем файл для записи
+        wr = csv.writer(final_table)
+        wr.writerow(("Group", "Primers", "Primer's seqs"))   # названия столбцов
+        wr.writerows(export_data)   # записываем данные в файл
+    return export_data
+
+
 if __name__ == '__main__':
     # Пользователь вводит полные пути к файлам
     #path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
@@ -261,7 +309,8 @@ if __name__ == '__main__':
     # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
     # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
-    # Tanya's paths: table =  ./TestPro.csv  list = ./TestPro.fasta
+    path_to_table = './TestPro.csv'
+    path_to_list = './TestPro.fasta'
 
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
@@ -273,4 +322,6 @@ if __name__ == '__main__':
     pre_seq_dict = double_dna(seq_dict)                          # словарь двух цепей последовательности
     gc_primer_dict = gc_primer(forw_rev_primers)              # словарь сходных участков с допустимым GC составом
     specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
+    pairs_primers = primer_pair(specific_primers)                # словарь пар праймеров
+    output = output_file_process(pairs_primers)                 # вывод результатов в .csv файл
 
