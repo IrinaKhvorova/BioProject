@@ -282,7 +282,7 @@ def primer_pair(specific_primer):
 # функция проверки взаиморасположения праймеров пары
 def coord_match(seqs_dict, specific_primer):
     for group in specific_primer:   # для каждой группы
-        match_set = set()   # список пар праймеров
+        match = []   # список пар праймеров
         for i in range(len(specific_primer[group])):   # для каждого праймера из списка группы
             primer_1 = specific_primer[group][i]
             for j in range(i + 1, len(specific_primer[group])):   # проверяем каждый следующий праймер этой группы
@@ -294,14 +294,13 @@ def coord_match(seqs_dict, specific_primer):
                                 s_strand = original_seq.seq   # в переменную помещаем ее посл-ть
                                 as_strand = original_seq.complement()   # в др переменную помещаем ей компл-ую
                                 if primer_1.name == 'forward' and primer_2.name == 'reversed':
-                                    primer_2_rev = Primer('reversed', primer_2.reverse())  # переворачиваем обратный
-                                    coord1 = s_strand.index(primer_1.seq)
-                                    coord2 = as_strand.index(primer_2_rev.seq)
-                                    if coord1 != coord2:
-                                        match_set.add(primer_1)
-                                        match_set.add(primer_2)
-        coord_match = list(match_set)
-        specific_primer[group] = coord_match
+                                    primer_2_rev = Primer('reversed', primer_2.reverse())  # переворачиваем обратный пр-р
+                                    coord1 = s_strand.index(primer_1.seq)   # находим индекс 1 эл-та прямого праймера
+                                    coord2 = as_strand.index(primer_2_rev.seq)   # находим индекс 1 эл-та обратного праймера
+                                    if coord1 != coord2:   # если координаты не совпадают, записываем в сет
+                                        match.append(primer_1)
+                                        match.append(primer_2)
+        specific_primer[group] = match   # сохраняем в словаре только отсортированные праймеры
 
     for group in specific_primer:  # для каждой группы
          for primer in specific_primer[group]:  # для каждого праймера в списке группы
@@ -310,39 +309,44 @@ def coord_match(seqs_dict, specific_primer):
     return specific_primer
 
 
-
 # запись результата подбора праймеров в файл
 def output_file_process(primer_pairs):
     total = []   # список списков
     groups = []   # список для записи групп
     primers_name = []   # список для записи типа праймера
     primers_seqs = []   # список для записи последовательностей праймеров
+    primers_temp = []   # список для записи темп-ры отжига праймеров
     for group in primer_pairs:   # для каждой группы из словаря пар праймеров
-        for primer in primer_pairs[group]:   # для каждого праймера группы
-            groups.append(group)   # записываем номер группы
-            primers_name.append(primer.name)   # записываем тип праймера
-            primers_seqs.append(primer.seq)   # заисываем последовательность праймера
+        if len(primer_pairs[group]) == 0:   # если список праймеров пуст
+            print(f'No primers for {group} group')   # сообщаем пользователю
+        else:
+            for primer in primer_pairs[group][0:2]:   # для каждой лучшей пары праймеров группы
+                groups.append(group)   # записываем номер группы
+                primers_name.append(primer.name)   # записываем тип праймера
+                primers_seqs.append(primer.seq)   # записываем последовательность праймера
+                primers_temp.append(primer.temp())   # записываем температуру отжига праймеров
     total.append(groups)   # добавляем списки в общий список
     total.append(primers_name)
     total.append(primers_seqs)
+    total.append(primers_temp)
     export_data = zip_longest(*total, fillvalue='')
     with open('final_table.csv', 'w', encoding="ISO-8859-1", newline='') as final_table:   # создаем файл для записи
         wr = csv.writer(final_table)
-        wr.writerow(("Group", "Primers", "Primer's seqs"))   # названия столбцов
+        wr.writerow(("Group", "Primers", "Primer's seqs", "Annealing temperature"))  # названия столбцов
         wr.writerows(export_data)   # записываем данные в файл
     return export_data
 
 
 if __name__ == '__main__':
     # Пользователь вводит полные пути к файлам
-    #path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
+    # path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
     # path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
 
-    #path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
-    #path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
+    # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
+    # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
-    path_to_table = './TestPro.csv'
-    path_to_list = './TestPro.fasta'
+    path_to_table = './Project.csv'
+    path_to_list = './Project_aligned.fasta'
 
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
@@ -355,6 +359,6 @@ if __name__ == '__main__':
     gc_primer_dict = gc_primer(forw_rev_primers)              # словарь сходных участков с допустимым GC составом
     specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
     pairs_primers = primer_pair(specific_primers)                # словарь пар праймеров
-    matching_coords = coord_match(seq_dict, specific_primers)
-    output = output_file_process(pairs_primers)                 # вывод результатов в .csv файл
+    matching_coords = coord_match(seq_dict, specific_primers)   #  словарь отсортированных по расположению праймеров
+    output = output_file_process(matching_coords)                 # вывод результатов в .csv файл
 
