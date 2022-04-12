@@ -255,6 +255,7 @@ def mismatch_sorter(seq_dict, primer_dict):
 
 # функция подбора пар праймеров по температуре отжига
 def primer_pair(specific_primer):
+    # сортируем по температуре
     for group in specific_primer:   # для каждой группы
         pairs = []   # список пар праймеров
         for i in range(len(specific_primer[group])):   # для каждого парймера из списка группы
@@ -271,11 +272,43 @@ def primer_pair(specific_primer):
                     continue   # продолжаем идти по списку, если праймеры не образуют пару прямой-обратный
         specific_primer[group] = pairs   # сохраняем в словаре только пары праймеров
 
-# выводим полученные пары праймеров для каждой группы
+    # выводим полученные пары праймеров для каждой группы
+    for group in specific_primer:  # для каждой группы
+         for primer in specific_primer[group]:  # для каждого праймера в списке группы
+            print(group, primer.name, primer.seq, primer.temp())  # выводим: № группы, тип праймера, температуру отжига
+    return specific_primer  # возвращаем словарь пар праймеров
+
+
+# функция проверки взаиморасположения праймеров пары
+def coord_match(seqs_dict, specific_primer):
     for group in specific_primer:   # для каждой группы
-        for primer in specific_primer[group]:   # для каждого праймера в списке группы
-            print(group, primer.name, primer.seq, primer.temp())   # выводим: № группы, тип праймера, температуру отжига
-    return specific_primer   # возвращаем словарь пар праймеров
+        match_set = set()   # список пар праймеров
+        for i in range(len(specific_primer[group])):   # для каждого праймера из списка группы
+            primer_1 = specific_primer[group][i]
+            for j in range(i + 1, len(specific_primer[group])):   # проверяем каждый следующий праймер этой группы
+                primer_2 = specific_primer[group][j]
+                for group_num in seqs_dict:   # для каждой группы словаря последовательностей
+                    if group_num == group:   # если ключи словарей праймеров и посл-тей совпадают
+                        for original_seq in seqs_dict[group_num]:   # для каждой цепи
+                            if 'matr' in original_seq.name:   # если оня смысловая
+                                s_strand = original_seq.seq   # в переменную помещаем ее посл-ть
+                                as_strand = original_seq.complement()   # в др переменную помещаем ей компл-ую
+                                if primer_1.name == 'forward' and primer_2.name == 'reversed':
+                                    primer_2_rev = Primer('reversed', primer_2.reverse())  # переворачиваем обратный
+                                    coord1 = s_strand.index(primer_1.seq)
+                                    coord2 = as_strand.index(primer_2_rev.seq)
+                                    if coord1 != coord2:
+                                        match_set.add(primer_1)
+                                        match_set.add(primer_2)
+        coord_match = list(match_set)
+        specific_primer[group] = coord_match
+
+    for group in specific_primer:  # для каждой группы
+         for primer in specific_primer[group]:  # для каждого праймера в списке группы
+            print(group, primer.name, primer.seq, primer.temp())  # выводим: № группы, тип праймера, температуру отжига
+
+    return specific_primer
+
 
 
 # запись результата подбора праймеров в файл
@@ -305,11 +338,11 @@ if __name__ == '__main__':
     #path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
     # path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
 
-    path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
-    path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
+    #path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
+    #path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
-    # path_to_table = './TestPro.csv'
-    # path_to_list = './TestPro.fasta'
+    path_to_table = './TestPro.csv'
+    path_to_list = './TestPro.fasta'
 
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
@@ -322,6 +355,6 @@ if __name__ == '__main__':
     gc_primer_dict = gc_primer(forw_rev_primers)              # словарь сходных участков с допустимым GC составом
     specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
     pairs_primers = primer_pair(specific_primers)                # словарь пар праймеров
-
+    matching_coords = coord_match(seq_dict, specific_primers)
     output = output_file_process(pairs_primers)                 # вывод результатов в .csv файл
 
