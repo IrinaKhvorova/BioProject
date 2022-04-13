@@ -104,7 +104,6 @@ def pre_primer_search(seq_list):
     for i in range(len(seq_list[0])):  # проходимся по всем буквам в последовательности
         letter_check = True  # изначально считаем, у всех последовательностей одинаковый i-ый нуклеотид
         for j in range(0, len(seq_list)-2, 2):  # пробегаемся по всем последовательностям
-            # print(seq_list[j][i], '?=?', seq_list[j+1][i])
             if seq_list[j][i] != seq_list[j+2][i]:  # проверка на равенство нуклеотидов
                 letter_check = False  # выявляем разницу в нуклеотидах
                 if len(pre_primer) >= 16:  # если длина пре-праймера >= 16
@@ -115,74 +114,40 @@ def pre_primer_search(seq_list):
             pre_primer += seq_list[0][i]  # записываем нуклеотид в пре-праймер
     return pre_primer_set  # возвращаем множество препраймеров
 
-def primer_dict(seq_dict):
-    print('pre_primer_dict')
-    pre_primer_dict = {}  # создали пустой словарь для препраймеров
-    for group in seq_dict:  # для каждой группы в словаре последовательностей
-        pre_primer_dict[group] = list(pre_primer_search(seq_dict[group]))  # словарь группа : список пре-праймеров
-        pre_primer_dict[group].sort(key=len)  # сортируем список праймеров по возрастанию длины
-        print(group, pre_primer_dict[group]) # выводит группу и список праймеров
-    return pre_primer_dict
-
-# удаляем из значений словаря праймеры, которые являются подстроками более длинных праймеров
-# сортируем в порядке возрастания длины праймеров
-# обновляем значения в словаре
-def unique_primer(primer_dict):
-    substrings_set = set()   # создаем пустое множество для добавления подстрок
-    for group in primer_dict:   # для каждой группы
-        primer_dict[group].sort(key=len)  # сортируем список праймеров по возрастанию длины
-        for i in range(len(primer_dict[group])):   # для каждого праймера из списка
-            for j in range(i + 1, len(primer_dict[group])):   # каждый следующий праймер из списка
-                if primer_dict[group][i] in primer_dict[group][j]:   # проверяем входит ли в него праймер i
-                    substrings_set.add(primer_dict[group][i])   # если входит, добавляем праймер i в множ-во подстрок
-        substrings_list = list(substrings_set)   # полученное мн-во трансформируем в список
-        # оставляем в списке только те строки(праймеры), кот-х нет в списке подстрок
-        unique_primer_list = [item for item in primer_dict[group] if item not in substrings_list]
-        primer_dict[group] = unique_primer_list   # перезаписываем для каждого ключа обновленный список
-
-    # код для того, чтобы посмотреть словарь отсортированных праймеров
-    print('unique_primer')
-    for group in primer_dict:  # для каждой группы
-        print(group, primer_dict[group])   # выводит группу и оставшиеся праймеры, отсорт. по длине
-
-    return primer_dict   # возвращаем словарь праймеров без повторов и подстрок
-
-
 # создание forward-reverse праймеров
-def forw_rev_primers(primer_dict):
-    for group in primer_dict:  # для каждой группы
-        primers = []           # создается пустой словарь
-        for i in primer_dict[group]:  # для каждого праймера из списка
-            forward = Primer('forward', i)     # создаем прямые праймеры
-            reversed = Primer('reversed', forward.complement())  # создаем комплементарные праймеры для прямых
-            reversed = Primer('reversed', reversed.reverse())        # создаем обратные праймеры
+def forw_rev_primers(pre_primer_list):
+    primers = []
+    for i in pre_primer_list:  # для каждого праймера из списка
+        forward = Primer('forward', i)     # создаем прямой праймер
+        revers = Primer('reversed', forward.complement())  # создаем комплементарный праймер
+        revers = Primer('reversed', revers.reverse())        # создаем обратный праймер
+        primers.append(forward)       # добавлем в список прямые праймеры
+        primers.append(revers)      # добавляем в список обратные праймеры
 
-            primers.append(forward)       # добавлем в словарь прямые праймеры
-            primers.append(reversed)      # добавляем в словарь обратные праймеры
-
-        primer_dict[group] = primers      # перезаписываем словарь
-
-# код для того, чтобы посмотреть словарь отсортированных праймеров
-#     for group in primer_dict:           # для каждой группы
-#         for primer in primer_dict[group]:
-#             print(group, primer.name, primer.seq)  # выводит группу и оставшиеся праймеры, отсорт. по длине
-
-    return primer_dict     # возвращаем словарь праймеров без повторов и подстрок
-
+    return primers     # возвращаем словарь праймеров без повторов и подстрок
 
 # фильтрация праймеров по GC составу
-def gc_primer(primer_dict):
-    for group in primer_dict:   # для каждой группы
-        primers = []
-        for i in primer_dict[group]:   # для каждого праймера из списка
-            if 0.5 < i.gc_cont() < 0.6:     # если GC состав меньше 50% и больше 60%
-                primers.append(i)
-        primer_dict[group] = primers
+def gc_primer(primer_list):
+    primers = []
+    for i in primer_list:   # для каждого праймера из списка
+        if 0.5 < i.gc_cont() < 0.6:     # если GC состав меньше 50% и больше 60%
+            primers.append(i)
 
-    for group in primer_dict:    # для каждой группы
-        print(group, primer_dict[group])       # выводит группу и отфильтрованные праймеры
+    # вывод праймеров
+    for primer in primers:    # для каждой группы
+        print(primer.name, primer.seq)       # выводит группу и отфильтрованные праймеры
 
-    return primer_dict   # возвращаем отфильтрованный по GC составу словарь праймеров
+    return primers   # возвращаем отфильтрованный по GC составу словарь праймеров
+
+def primer_dict(seq_dict):
+    print('pre_primer_dict')
+    primers_dict = {}  # создали пустой словарь для препраймеров
+    for group in seq_dict:  # для каждой группы в словаре последовательностей
+        pre_primers_list = list(pre_primer_search(seq_dict[group]))  # словарь группа : список пре-праймеров
+        pre_primers_list.sort(key=len)  # сортируем список праймеров по возрастанию длины
+        primer_list = forw_rev_primers(pre_primers_list)
+        primers_dict[group] = gc_primer(primer_list)
+    return primers_dict
 
 
 # функция по определению, оттожется ли праймер на последовательности
