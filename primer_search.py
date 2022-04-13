@@ -67,6 +67,7 @@ class Primer(DNA):
         temper = 22 + 1.46 * (2*(g+c) + (a+t))
         return temper
 
+
 # обработка данных, введенных пользователем
 def input_file_process(table_path, list_path):
     seqs = {}  # создали пустой словарь, чтобы добавить туда все последовательности
@@ -188,8 +189,8 @@ def forw_rev_primers(primer_dict):
         primers = []           # создается пустой словарь
         for i in primer_dict[group]:  # для каждого праймера из списка
             forward = Primer('forward', i)     # создаем прямые праймеры
-            reversed = Primer('reversed', forward.complement())  # создаем комплементарные праймеры для прямых
-            reversed = Primer('reversed', reversed.reverse())        # создаем обратные праймеры
+            reversed = Primer('reverse', forward.complement())  # создаем комплементарные праймеры для прямых
+            reversed = Primer('reverse', reversed.reverse())        # создаем обратные праймеры
 
             primers.append(forward)       # добавлем в словарь прямые праймеры
             primers.append(reversed)      # добавляем в словарь обратные праймеры
@@ -262,7 +263,7 @@ def primer_pair(specific_primer):
             primer_1 = specific_primer[group][i]
             for j in range(i + 1, len(specific_primer[group])):   # проверяем каждый следующий праймер этой группы
                 primer_2 = specific_primer[group][j]
-                if primer_1.name == 'forward' and primer_2.name == 'reversed':   # если могут образовать пару прмой-обратный
+                if primer_1.name == 'forward' and primer_2.name == 'reverse':   # если могут образовать пару прмой-обратный
                     if abs(primer_1.temp() - primer_2.temp()) <= 5:  # разность температуры отжига не превышает 5 по модулю
                         pairs.append(primer_1)   # добавляем прямой праймер в список
                         pairs.append(primer_2)   # добавляем обратный праймер в список
@@ -283,32 +284,19 @@ def primer_pair(specific_primer):
 def coord_match(seqs_dict, specific_primer):
     for group in specific_primer:   # для каждой группы
         match = []   # список пар праймеров
-        for i in range(len(specific_primer[group])):   # для каждого праймера из списка группы
-            primer_1 = specific_primer[group][i]
-            for j in range(i + 1, len(specific_primer[group])):   # проверяем каждый следующий праймер этой группы
-                primer_2 = specific_primer[group][j]
-                for group_num in seqs_dict:   # для каждой группы словаря последовательностей
-                    if group_num == group:   # если ключи словарей праймеров и посл-тей совпадают
-                        for original_seq in seqs_dict[group_num]:   # для каждой цепи
-                            if 'matr' in original_seq.name:   # если оня матричная
-                                s_strand = original_seq.seq   # в переменную помещаем ее посл-ть
-                                as_strand = original_seq.complement()   # в др переменную помещаем ей компл-ую
-                                print(s_strand, as_strand)
-                                if primer_1.name == 'forward' and primer_2.name == 'reversed':
-                                    primer_2_rev = Primer('reversed', primer_2.reverse())  # переворачиваем обратный пр-р
-                                    coord1 = s_strand.index(primer_1.seq)   # находим индекс 1 эл-та прямого праймера
-                                    coord2 = as_strand.index(primer_2_rev.seq)   # находим индекс 1 эл-та обратного праймера
-
-                                    print(primer_1.seq, primer_2.seq, primer_2_rev.seq)
-                                    if coord1 != coord2:   # если координаты не совпадают, записываем в сет
-                                        match.append(primer_1)
-                                        match.append(primer_2)
+        for i in range(0,len(specific_primer[group])-1,2):   # для каждого праймера из списка группы
+            primer_1,primer_2 = specific_primer[group][i],specific_primer[group][i+1]
+            for original_seq in seqs_dict[group]:   # для каждой цепи
+                if 'matr' in original_seq.name:   # если оня матричная
+                    s_strand = original_seq.seq   # в переменную помещаем ее посл-ть
+                    as_strand = original_seq.complement()   # в др переменную помещаем ей компл-ую
+                    primer_2_rev = Primer('reverse', primer_2.reverse())  # переворачиваем обратный пр-р
+                    coord1 = s_strand.index(primer_1.seq)   # находим индекс 1 эл-та прямого праймера
+                    coord2 = as_strand.index(primer_2_rev.seq)   # находим индекс 1 эл-та обратного праймера
+                    if coord1 != coord2:   # если координаты не совпадают, записываем в сет
+                        match.append(primer_1)
+                        match.append(primer_2)
         specific_primer[group] = match   # сохраняем в словаре только отсортированные праймеры
-
-    for group in specific_primer:  # для каждой группы
-         for primer in specific_primer[group]:  # для каждого праймера в списке группы
-            print(group, primer.name, primer.seq, primer.temp())  # выводим: № группы, тип праймера, температуру отжига
-
     return specific_primer
 
 
@@ -348,8 +336,8 @@ if __name__ == '__main__':
     # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
     # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
-     #path_to_table = './Project.csv'
-     #path_to_list = './Project_aligned.fasta'
+    path_to_table = './TestPro.csv'
+    path_to_list = './TestPro.fasta'
 
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
