@@ -290,13 +290,16 @@ def coord_match(seqs_dict, specific_primer):
                 for group_num in seqs_dict:   # для каждой группы словаря последовательностей
                     if group_num == group:   # если ключи словарей праймеров и посл-тей совпадают
                         for original_seq in seqs_dict[group_num]:   # для каждой цепи
-                            if 'matr' in original_seq.name:   # если оня смысловая
+                            if 'matr' in original_seq.name:   # если оня матричная
                                 s_strand = original_seq.seq   # в переменную помещаем ее посл-ть
                                 as_strand = original_seq.complement()   # в др переменную помещаем ей компл-ую
+                                print(s_strand, as_strand)
                                 if primer_1.name == 'forward' and primer_2.name == 'reversed':
                                     primer_2_rev = Primer('reversed', primer_2.reverse())  # переворачиваем обратный пр-р
                                     coord1 = s_strand.index(primer_1.seq)   # находим индекс 1 эл-та прямого праймера
                                     coord2 = as_strand.index(primer_2_rev.seq)   # находим индекс 1 эл-та обратного праймера
+
+                                    print(primer_1.seq, primer_2.seq, primer_2_rev.seq)
                                     if coord1 != coord2:   # если координаты не совпадают, записываем в сет
                                         match.append(primer_1)
                                         match.append(primer_2)
@@ -345,8 +348,8 @@ if __name__ == '__main__':
     # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
     # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
-    path_to_table = './Project.csv'
-    path_to_list = './Project_aligned.fasta'
+     #path_to_table = './Project.csv'
+     #path_to_list = './Project_aligned.fasta'
 
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
