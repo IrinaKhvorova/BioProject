@@ -67,12 +67,14 @@ class Primer(DNA):
         temper = 22 + 1.46 * (2*(g+c) + (a+t))
         return temper
 
+
 # функция для создания двух цепей ДНК
 def double_dna(name, seq):
     matrix_seq = DNA(name + " matr", str(seq))  # создает матричную последовательность
     comp_seq = DNA(name, matrix_seq.complement())  # создает комплементарную последовательность
     rev_seq = DNA(name + " comp", comp_seq.reverse())  # создает обратную последовательность
     return matrix_seq, rev_seq
+
 
 # обработка данных, введенных пользователем
 def input_file_process(table_path, list_path):
@@ -99,6 +101,7 @@ def input_file_process(table_path, list_path):
 
     return seqs
 
+
 def pre_primer_search(seq_list):
     pre_primer_set, pre_primer = set(), ''  # пустое множество для пре-праймеров и нустой препраймер
     for i in range(len(seq_list[0])):  # проходимся по всем буквам в последовательности
@@ -114,6 +117,7 @@ def pre_primer_search(seq_list):
             pre_primer += seq_list[0][i]  # записываем нуклеотид в пре-праймер
     return pre_primer_set  # возвращаем множество препраймеров
 
+
 # создание forward-reverse праймеров
 def forw_rev_primers(pre_primer_list):
     primers = []
@@ -125,6 +129,7 @@ def forw_rev_primers(pre_primer_list):
         primers.append(revers)      # добавляем в список обратные праймеры
 
     return primers     # возвращаем словарь праймеров без повторов и подстрок
+
 
 # фильтрация праймеров по GC составу
 def gc_primer(primer_list):
@@ -139,8 +144,8 @@ def gc_primer(primer_list):
 
     return primers   # возвращаем отфильтрованный по GC составу словарь праймеров
 
+
 def primer_dict(seq_dict):
-    print('pre_primer_dict')
     primers_dict = {}  # создали пустой словарь для препраймеров
     for group in seq_dict:  # для каждой группы в словаре последовательностей
         pre_primers_list = list(pre_primer_search(seq_dict[group]))  # словарь группа : список пре-праймеров
@@ -170,7 +175,7 @@ def mismatch_sorter(seq_dict, primer_dict):
         specific_primers = []  # список для специфичных праймеров
         for primer in primer_dict[group]:   # для каждого праймера из списка
             primer_annealing = False  # изначально отжиг праймера = F
-            for gr in seq_dict: # для каждой группы
+            for gr in seq_dict:  # для каждой группы
                 if gr != group:  # нас интересуют последовательности только других групп
                     for seq in seq_dict[gr]:  # для каждой последовательности группы
                         # проверка на отжиг праймера на последовательности
@@ -191,61 +196,49 @@ def mismatch_sorter(seq_dict, primer_dict):
 
 
 # функция подбора пар праймеров по температуре отжига
-def primer_pair(specific_primer):
-    # сортируем по температуре
-    for group in specific_primer:   # для каждой группы
-        pairs = []   # список пар праймеров
-        for i in range(len(specific_primer[group])):   # для каждого парймера из списка группы
-            primer_1 = specific_primer[group][i]
-            for j in range(i + 1, len(specific_primer[group])):   # проверяем каждый следующий праймер этой группы
-                primer_2 = specific_primer[group][j]
-                if primer_1.name == 'forward' and primer_2.name == 'reversed':   # если могут образовать пару прмой-обратный
-                    if abs(primer_1.temp() - primer_2.temp()) <= 5:  # разность температуры отжига не превышает 5 по модулю
-                        pairs.append(primer_1)   # добавляем прямой праймер в список
-                        pairs.append(primer_2)   # добавляем обратный праймер в список
-                    else:
-                        print('no matcing pairs')   # вывод если совпадения не найдены
-                else:
-                    continue   # продолжаем идти по списку, если праймеры не образуют пару прямой-обратный
-        specific_primer[group] = pairs   # сохраняем в словаре только пары праймеров
+def temp_primer_pairs(primer_list):
+    pairs = []   # список пар праймеров
+    for i in range(len(primer_list)):   # для каждого парймера из списка группы
+        primer_1 = primer_list[i]
+        for j in range(i + 1, len(primer_list)):   # проверяем каждый следующий праймер этой группы
+            primer_2 = primer_list[j]
+            if primer_1.name == 'forward' and primer_2.name == 'reversed':   # если могут образовать пару прмой-обратный
+                if abs(primer_1.temp() - primer_2.temp()) <= 5:  # разность температуры отжига не превышает 5 по модулю
+                    pairs.append(primer_1)   # добавляем прямой праймер в список
+                    pairs.append(primer_2)   # добавляем обратный праймер в список
+            else:
+                continue   # продолжаем идти по списку, если праймеры не образуют пару прямой-обратный
 
-    # выводим полученные пары праймеров для каждой группы
-    for group in specific_primer:  # для каждой группы
-         for primer in specific_primer[group]:  # для каждого праймера в списке группы
-            print(group, primer.name, primer.seq, primer.temp())  # выводим: № группы, тип праймера, температуру отжига
-    return specific_primer  # возвращаем словарь пар праймеров
+    return pairs
 
 
-# функция проверки взаиморасположения праймеров пары
-def coord_match(seqs_dict, specific_primer):
-    for group in specific_primer:   # для каждой группы
-        match_set = set()   # список пар праймеров
-        for i in range(len(specific_primer[group])):   # для каждого праймера из списка группы
-            primer_1 = specific_primer[group][i]
-            for j in range(i + 1, len(specific_primer[group])):   # проверяем каждый следующий праймер этой группы
-                primer_2 = specific_primer[group][j]
-                for group_num in seqs_dict:   # для каждой группы словаря последовательностей
-                    if group_num == group:   # если ключи словарей праймеров и посл-тей совпадают
-                        for original_seq in seqs_dict[group_num]:   # для каждой цепи
-                            if 'matr' in original_seq.name:   # если оня смысловая
-                                s_strand = original_seq.seq   # в переменную помещаем ее посл-ть
-                                as_strand = original_seq.complement()   # в др переменную помещаем ей компл-ую
-                                if primer_1.name == 'forward' and primer_2.name == 'reversed':
-                                    primer_2_rev = Primer('reversed', primer_2.reverse())  # переворачиваем обратный
-                                    coord1 = s_strand.index(primer_1.seq)
-                                    coord2 = as_strand.index(primer_2_rev.seq)
-                                    if coord1 != coord2:
-                                        match_set.add(primer_1)
-                                        match_set.add(primer_2)
-        coord_match = list(match_set)
-        specific_primer[group] = coord_match
+# функция проверки взаиморасположения пары праймеров
+def coord_match(seq, primer_list):
+    match_list = []   # пустой список пар праймеров
+    for i in range(0, len(primer_list)-1, 2):   # для каждой пары праймеров из списка группы
+        primer_1, primer_2 = primer_list[i], primer_list[i+1]
+        matrix_strand = seq.seq   # в переменную помещаем ее посл-ть
+        comp_strand = seq.complement()   # в др переменную помещаем ей компл-ую
+        primer_2_rev = Primer('reversed', primer_2.reverse())  # переворачиваем обратный
+        coord1 = matrix_strand.index(primer_1.seq)  # координата forward праймера
+        coord2 = comp_strand.index(primer_2_rev.seq)  # координата reversed праймера
+        if coord1 != coord2:  # проверяем, что они не совпадают
+            match_list.append(primer_1)  # добавляем пару праймеров
+            match_list.append(primer_2)  # добавляем пару праймеров
+    return match_list
 
-    for group in specific_primer:  # для каждой группы
-         for primer in specific_primer[group]:  # для каждого праймера в списке группы
+
+# функция подбора пар праймеров
+def primer_pairs(primers_dict, seq_dict):     # сортируем по температуре
+    for group in primers_dict:  # для каждой группы
+        temp_pairs = temp_primer_pairs(primers_dict[group])   # сохраняем пары праймеров по температуре
+        primers_dict[group] = coord_match(seq_dict[group][0], temp_pairs)
+
+
+        for primer in primers_dict[group]:  # для каждого праймера в списке группы
             print(group, primer.name, primer.seq, primer.temp())  # выводим: № группы, тип праймера, температуру отжига
 
-    return specific_primer
-
+    return primers_dict  # возвращаем словарь пар праймеров
 
 
 # запись результата подбора праймеров в файл
@@ -280,7 +273,6 @@ if __name__ == '__main__':
     # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/Project.csv'
     # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/Project_aligned.fasta'
 
-
     # path_to_table = './TestPro.csv'
     # path_to_list = './TestPro.fasta'
 
@@ -288,14 +280,8 @@ if __name__ == '__main__':
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
 
     seq_dict = input_file_process(path_to_table, path_to_list)   # словарь исходных последовательностей
-    pre_primer_dict = primer_dict(seq_dict)
-    # prer_primers_dict = prer_primer_dict(seq_dict)                 # словарь сходных участков последовательностей внутри групп
-    # unique_pre_primers = unique_primer(prer_primers_dict)         # словарь сходных участков без повторов и подстрок
-    # forw_rev_primers = forw_rev_primers(unique_pre_primers)     # словарь прямых и обратных праймеров
-    # double_seq_dict = double_dna(seq_dict)                          # словарь двух цепей последовательности
-    # gc_primer_dict = gc_primer(forw_rev_primers)              # словарь сходных участков с допустимым GC составом
-    # specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
-    # pairs_primers = primer_pair(specific_primers)                # словарь пар праймеров
-    # matching_coords = coord_match(seq_dict, specific_primers)
-    # output = output_file_process(pairs_primers)                 # вывод результатов в .csv файл
+    primer_dict = primer_dict(seq_dict)
+    specific_primers = mismatch_sorter(seq_dict, primer_dict)  # словарь специфичных праймеров
+    matching_primers = primer_pairs(specific_primers, seq_dict)
+    output = output_file_process(matching_primers)               # вывод результатов в .csv файл
 
