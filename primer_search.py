@@ -10,7 +10,7 @@ class Sequence:
         self.name = name
         self.seq = seq
 
-    def __getitem__(self, item):  # возвращает по запросу символ в последовательности
+    def __getitem__(self, item):  # возвращает символ в последовательности
         return self.seq[item]
 
     def __len__(self):  # возвращает длину последовательности
@@ -81,7 +81,12 @@ def input_file_process(table_path, list_path):
                 list = SeqIO.parse(list, 'fasta')  # преобразуем fasta-файл для вычленения интересующих пар-в
                 for feature in list:  # для каждой посл-ти из списка ищем совпадение имени в списке и табл
                     if feature.name in row:
-                        seqs[row[0]].append(DNA(str(feature.name), str(feature.seq)))
+                        # seqs[row[0]].append(DNA(str(feature.name), str(feature.seq)))
+                        matrix_seq = DNA(str(feature.name) + " matr", str(feature.seq))  # создает матричную последовательность
+                        comp_seq = DNA(str(feature.name), matrix_seq.complement())  # создает комплементарную последовательность
+                        rev_seq = DNA(comp_seq.name + " comp", comp_seq.reverse())  # создает обратную последовательность
+                        seqs[row[0]].append(matrix_seq)
+                        seqs[row[0]].append(rev_seq)
 
     # код для того, чтобы посмотреть словарь исходных последовательностей
     for group in seqs:
@@ -92,72 +97,98 @@ def input_file_process(table_path, list_path):
 
 
 # функция для создания двух цепей ДНК
-def double_dna(seqs):
-    for group in seqs:              # для каждой группы
-        double_seqs = []            # создается пустой словарь
-        for orig_seq in seqs[group]:      # для каждой последовательности
-            matr_seq = DNA(orig_seq.name + " matr", orig_seq.seq)
-            comp_seq = DNA(orig_seq.name, orig_seq.complement())    # создает комплементарную последовательность
-            rev_seq = DNA(orig_seq.name + " comp", comp_seq.reverse())        # создает обратную последовательность
+# def double_dna(seqs):
+#     for group in seqs:              # для каждой группы
+#         double_seqs = []            # создается пустой словарь
+#         for orig_seq in seqs[group]:      # для каждой последовательности
+#             matr_seq = DNA(orig_seq.name + " matr", orig_seq.seq)
+#             comp_seq = DNA(orig_seq.name, orig_seq.complement())    # создает комплементарную последовательность
+#             rev_seq = DNA(orig_seq.name + " comp", comp_seq.reverse())        # создает обратную последовательность
+#
+#             double_seqs.append(matr_seq)       # добавляем оригинальный сиквенс в словарь
+#             double_seqs.append(rev_seq)        # добавляем новый сиквенс в словарь
+#
+#         seqs[group] = double_seqs     # перезаписываем словарь
+#
+#     # код для того, чтобы посмотреть словарь двух последовательностей
+#     for key in seqs:
+#         for s in seqs[key]:
+#             print(key, s.name, s.seq, len(s))  # выводит группу, имя, последовательность и ее длину
+#
+#     return seqs
 
-            double_seqs.append(matr_seq)       # добавляем оригинальный сиквенс в словарь
-            double_seqs.append(rev_seq)        # добавляем новый сиквенс в словарь
-
-        seqs[group] = double_seqs     # перезаписываем словарь
-
-    # код для того, чтобы посмотреть словарь двух последовательностей
-    for key in seqs:
-        for s in seqs[key]:
-            print(key, s.name, s.seq, len(s))  # выводит группу, имя, последовательность и ее длину
-
-    return seqs
-
-
-# функция для разделения последовательности на k-меры
-def seq_kmers(k, sequence):  # принимает длину к-мера и последовательность
-    kmers = []  # создаем пустой список k-меров
-    for s in range(0, len(sequence) - k + 1):  # пробегаемся по всей последовательности
-        kmers.append(sequence[s:s+k])  # делаем срезы длины k и добавляем их в список
-    return kmers   # возвращает списком все к-меры последовательности
+# # функция для разделения последовательности на k-меры
+# def seq_kmers(k, sequence):  # принимает длину к-мера и последовательность
+#     kmers = []  # создаем пустой список k-меров
+#     for s in range(0, len(sequence) - k + 1):  # пробегаемся по всей последовательности
+#         kmers.append(sequence[s:s+k])  # делаем срезы длины k и добавляем их в список
+#     return kmers   # возвращает списком все к-меры последовательности
 
 
 # создание словаря k-меров
 # в группах для каждой возможной длины праймера хранится список множеств
 # в множествах находятся подстроки длины k для каждой последовательности группы
-def kmers_dict(seq_dict):
-    kmers_dict = {}  # создали пустой словарь k-меров
-    for group in seq_dict:  # для каждой группы в словаре
-        kmers_dict[group] = {}  # словарь состоит из групп
-        for s in seq_dict[group]:  # для каждой последовательности в группе
-            for k in range(16, 31):  # для каждой длины праймерв (задаем границы)
-                if k not in kmers_dict[group]:  # проверка на наличие ключа - длины k
-                    kmers_dict[group][k] = []  # если нет, то создаем ключ и пустой список для множеств
-                unique_kmers = set(seq_kmers(k, s.seq))  # находим множество уникальных к-меров (длины k)
-                kmers_dict[group][k].append(unique_kmers)  # добавляем в список множество с подстроками длины k
-    return kmers_dict  # возвращаем словарь k-меров
+# def kmers_dict(seq_dict):
+#     kmers_dict = {}  # создали пустой словарь k-меров
+#     for group in seq_dict:  # для каждой группы в словаре
+#         kmers_dict[group] = {}  # словарь состоит из групп
+#         for s in seq_dict[group]:  # для каждой последовательности в группе
+#             for k in range(16, 31):  # для каждой длины праймерв (задаем границы)
+#                 if k not in kmers_dict[group]:  # проверка на наличие ключа - длины k
+#                     kmers_dict[group][k] = []  # если нет, то создаем ключ и пустой список для множеств
+#                 unique_kmers = set(seq_kmers(k, s.seq))  # находим множество уникальных к-меров (длины k)
+#                 kmers_dict[group][k].append(unique_kmers)  # добавляем в список множество с подстроками длины k
+#     return kmers_dict  # возвращаем словарь k-меров
 
 
 # создание словаря праймеров
 # оставляем из словаря k-меров только те праймеры, которые общие для всех последовательностей группы
-def primer_dict(seq_dict):
-    primer_dict = {}  # создаем пустой словарь праймеров
-    dict = kmers_dict(seq_dict)  # получаем словарь k-меров
-    for group in dict:  # для каждой группы
-        primer_dict[group] = []  # словарь праймеров состоит из групп
-        for k in dict[group]:  # для каждой длины праймерв в группе
-            for i in range(len(dict[group][k])-1):  # пробегаемся по всем множествам k-меров в группе
-                if i == 0:  # проверка на то, что это первое множество
-                    k_intersection = dict[group][k][i]  # в пересечении будет первое мноество
-                k_intersection.intersection_update(dict[group][k][i+1])  # находим пересечение всех множеств списка
-            for primer in k_intersection:  # для каждого праймера в множестве пересейчений
-                primer_dict[group].append(primer)  # добавляем праймер в словарь (группа : список праймеров)
+# def prer_primer_dict(seq_dict):
+#     primer_dict = {}  # создаем пустой словарь праймеров
+#     dict = kmers_dict(seq_dict)  # получаем словарь k-меров
+#     for group in dict:  # для каждой группы
+#         primer_dict[group] = []  # словарь праймеров состоит из групп
+#         for k in dict[group]:  # для каждой длины праймерв в группе
+#             for i in range(len(dict[group][k])-1):  # пробегаемся по всем множествам k-меров в группе
+#                 if i == 0:  # проверка на то, что это первое множество
+#                     k_intersection = dict[group][k][i]  # в пересечении будет первое мноество
+#                 k_intersection.intersection_update(dict[group][k][i+1])  # находим пересечение всех множеств списка
+#             for primer in k_intersection:  # для каждого праймера в множестве пересейчений
+#                 primer_dict[group].append(primer)  # добавляем праймер в словарь (группа : список праймеров)
+#
+#     # код для того, чтобы посмотреть словарь праймеров
+#     print('prer_primer_dict')
+#     for group in primer_dict:  # для каждой группы
+#         print(group, primer_dict[group]) # выводит группу и список праймеров
+#
+#     return primer_dict   # возвращаем словарь праймеров
 
-    # код для того, чтобы посмотреть словарь праймеров
-    for key in primer_dict:  # для каждой группы
-        print(key, primer_dict[key]) # выводит группу и список праймеров
+def pre_primer_search(seq_list):
+    seqs_count = len(seq_list)  # количество последовательностей
+    seq_length = len(seq_list[0])  # длина последовательности
+    pre_primer_set, pre_primer = set(), ''  # пустое множество для пре-праймеров и нустой препраймер
+    for i in range(seq_length):  # проходимся по всем буквам в последовательности
+        letter_check = True  # изначально считаем, у всех последовательностей одинаковый i-ый нуклеотид
+        for j in range(0, seqs_count-2, 2):  # пробегаемся по всем последовательностям
+            # print(seq_list[j][i], '?=?', seq_list[j+1][i])
+            if seq_list[j][i] != seq_list[j+2][i]:  # проверка на равенство нуклеотидов
+                letter_check = False  # выявляем разницу в нуклеотидах
+                if len(pre_primer) >= 16:  # если длина пре-праймера >= 16
+                    pre_primer_set.add(pre_primer)  # добавляем препраймер в список
+                pre_primer = ''  # обнуляем пре-праймер
+                break  # обрываем цикл
+        if letter_check:  # если у всех последовательностей i-ый нуклеотид одинаковый
+            pre_primer += seq_list[0][i]  # записываем нуклеотид в пре-праймер
+    return pre_primer_set  # возвращаем множество препраймеров
 
-    return primer_dict   # возвращаем словарь праймеров
-
+def pre_primer_dict(seq_dict):
+    print('pre_primer_dict')
+    pre_primer_dict = {}  # создали пустой словарь для препраймеров
+    for group in seq_dict:  # для каждой группы в словаре последовательностей
+        pre_primer_dict[group] = list(pre_primer_search(seq_dict[group]))  # словарь группа : список пре-праймеров
+        pre_primer_dict[group].sort(key=len)  # сортируем список праймеров по возрастанию длины
+        print(group, pre_primer_dict[group]) # выводит группу и список праймеров
+    return pre_primer_dict
 
 # удаляем из значений словаря праймеры, которые являются подстроками более длинных праймеров
 # сортируем в порядке возрастания длины праймеров
@@ -176,6 +207,7 @@ def unique_primer(primer_dict):
         primer_dict[group] = unique_primer_list   # перезаписываем для каждого ключа обновленный список
 
     # код для того, чтобы посмотреть словарь отсортированных праймеров
+    print('unique_primer')
     for group in primer_dict:  # для каждой группы
         print(group, primer_dict[group])   # выводит группу и оставшиеся праймеры, отсорт. по длине
 
@@ -197,9 +229,9 @@ def forw_rev_primers(primer_dict):
         primer_dict[group] = primers      # перезаписываем словарь
 
 # код для того, чтобы посмотреть словарь отсортированных праймеров
-    for group in primer_dict:           # для каждой группы
-        for primer in primer_dict[group]:
-            print(group, primer.name, primer.seq)  # выводит группу и оставшиеся праймеры, отсорт. по длине
+#     for group in primer_dict:           # для каждой группы
+#         for primer in primer_dict[group]:
+#             print(group, primer.name, primer.seq)  # выводит группу и оставшиеся праймеры, отсорт. по длине
 
     return primer_dict     # возвращаем словарь праймеров без повторов и подстрок
 
@@ -233,7 +265,7 @@ def mismatch_counter(seq, primer):
     return primer_annealing  # возвращает T или F в зависимости от того, оттожется ли праймер на seq
 
 
-# функция по созданию слооваря группоспецифичных праймеров
+# функция по созданию словаря группоспецифичных праймеров
 def mismatch_sorter(seq_dict, primer_dict):
     for group in primer_dict:   # для каждой группы
         specific_primers = []  # список для специфичных праймеров
@@ -242,7 +274,8 @@ def mismatch_sorter(seq_dict, primer_dict):
             for gr in seq_dict: # для каждой группы
                 if gr != group:  # нас интересуют последовательности только других групп
                     for seq in seq_dict[gr]:  # для каждой последовательности группы
-                        if mismatch_counter(seq.seq, primer.seq):  # проверка на отжиг праймера на последовательности
+                        # проверка на отжиг праймера на последовательности
+                        if mismatch_counter(seq.seq, primer.seq):
                             primer_annealing = True  # праймер отжегся
                             break  # обрываем проверку на отжиг внутри группы
                 if primer_annealing:  # проверка на отжиг праймера в группе
@@ -250,6 +283,11 @@ def mismatch_sorter(seq_dict, primer_dict):
             if not primer_annealing:  # проверка на отжиг праймера среди всех групп
                 specific_primers.append(primer)  # добавляем праймер в список специфичных праймеров
         primer_dict[group] = specific_primers  # сохраняем в словаре только группоспецифичные праймеры
+
+    for group in primer_dict:   # для каждой группы
+        for primer in primer_dict[group]:   # для каждого праймера в списке группы
+            print(group, primer.name, primer.seq)
+
     return primer_dict  # возвращаем словарь группоспецифичных праймеров
 
 
@@ -338,23 +376,27 @@ if __name__ == '__main__':
     #path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
     # path_to_table, path_to_list = input('Введите путь до таблицы '), input('Введите путь до списка ')
 
-    #path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
-    #path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
+    path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
+    path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
+    # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/Project.csv'
+    # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/Project_aligned.fasta'
 
-    path_to_table = './TestPro.csv'
-    path_to_list = './TestPro.fasta'
+
+    # path_to_table = './TestPro.csv'
+    # path_to_list = './TestPro.fasta'
 
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
 
     seq_dict = input_file_process(path_to_table, path_to_list)   # словарь исходных последовательностей
-    pre_primers_dict = primer_dict(seq_dict)                 # словарь сходных участков последовательностей внутри групп
-    unique_pre_primers = unique_primer(pre_primers_dict)         # словарь сходных участков без повторов и подстрок
-    forw_rev_primers = forw_rev_primers(unique_pre_primers)     # словарь прямых и обратных праймеров
-    pre_seq_dict = double_dna(seq_dict)                          # словарь двух цепей последовательности
-    gc_primer_dict = gc_primer(forw_rev_primers)              # словарь сходных участков с допустимым GC составом
-    specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
-    pairs_primers = primer_pair(specific_primers)                # словарь пар праймеров
-    matching_coords = coord_match(seq_dict, specific_primers)
-    output = output_file_process(pairs_primers)                 # вывод результатов в .csv файл
+    pre_primer_dict = pre_primer_dict(seq_dict)
+    # prer_primers_dict = prer_primer_dict(seq_dict)                 # словарь сходных участков последовательностей внутри групп
+    # unique_pre_primers = unique_primer(prer_primers_dict)         # словарь сходных участков без повторов и подстрок
+    # forw_rev_primers = forw_rev_primers(unique_pre_primers)     # словарь прямых и обратных праймеров
+    # double_seq_dict = double_dna(seq_dict)                          # словарь двух цепей последовательности
+    # gc_primer_dict = gc_primer(forw_rev_primers)              # словарь сходных участков с допустимым GC составом
+    # specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
+    # pairs_primers = primer_pair(specific_primers)                # словарь пар праймеров
+    # matching_coords = coord_match(seq_dict, specific_primers)
+    # output = output_file_process(pairs_primers)                 # вывод результатов в .csv файл
 
