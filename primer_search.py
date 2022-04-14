@@ -348,7 +348,7 @@ if __name__ == '__main__':
     forw_rev_primers = forw_rev_primers(unique_pre_primers)     # словарь прямых и обратных праймеров
     pre_seq_dict = double_dna(seq_dict)                          # словарь двух цепей последовательности
     gc_primer_dict = gc_primer(forw_rev_primers)              # словарь сходных участков с допустимым GC составом
-    specific_primers = mismatch_sorter(seq_dict, gc_primer_dict) # словарь специфичных праймеров
+    specific_primers = mismatch_sorter(pre_seq_dict, gc_primer_dict) # словарь специфичных праймеров
     pairs_primers = primer_pair(specific_primers)                # словарь пар праймеров
     matching_coords = coord_match(seq_dict, specific_primers)   #  словарь отсортированных по расположению праймеров
     output = output_file_process(matching_coords)                 # вывод результатов в .csv файл
