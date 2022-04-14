@@ -293,8 +293,8 @@ def coord_match(seqs_dict, specific_primer):
                     primer_2_rev = Primer('reverse', primer_2.reverse())  # переворачиваем обратный пр-р
                     coord1 = s_strand.index(primer_1.seq)   # находим индекс 1 эл-та прямого праймера
                     coord2 = as_strand.index(primer_2_rev.seq)   # находим индекс 1 эл-та обратного праймера
-                    if coord1 != coord2:   # если координаты не совпадают, записываем в сет
-                        match.append(primer_1)
+                    if coord1 < coord2:   # если координаты прямого праймера меньше чем коорд-ты обратного
+                        match.append(primer_1)   # записываем их в список
                         match.append(primer_2)
         specific_primer[group] = match   # сохраняем в словаре только отсортированные праймеры
     return specific_primer
@@ -336,8 +336,8 @@ if __name__ == '__main__':
     # path_to_table = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.csv'
     # path_to_list = '/Users/akhvorov/Desktop/home_task/BioProject/TestPro.fasta'
 
-    path_to_table = './TestPro.csv'
-    path_to_list = './TestPro.fasta'
+    path_to_table = './Project.csv'
+    path_to_list = './Project_aligned.fasta'
 
     # path_to_table = '/Users/dnayd/Desktop/Project/TestPro.csv'
     # path_to_list = '/Users/dnayd/Desktop/Project/TestPro.fasta'
